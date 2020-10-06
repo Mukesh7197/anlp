@@ -7,6 +7,8 @@ Code can compute out of vocabulary words probability and generate test sentence 
 Graphical output for comparison of models - Bigram, Trigram and Quadgram
 Line Plots for Probability Vs Perplexity, Number of Words Vs Perplexity, Number of conditions, Number of words predicted etc.
 Predicts upto ten (different or same) words following a sequence of words for language models
+Results may vary for prediction upto ten words. Depends upon probabilities.
+Example quoted provides best results for quadgram based model
 
 Codes can be easily extended to build for ngrams
 
