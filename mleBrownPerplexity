@@ -1,0 +1,117 @@
+################################################################################################
+Fifteen categories of Brown corpus contains more than million words
+This code can be used for developing language models based on Brown corpus
+This code produces probability of occurrence of word or word sequences based on MLE
+This code calcualtes perplexity of the developed model
+Only codes of unigram and quadgram language models are made available
+It can be extended for anygram by doing suitable modification
+Code caters for start and end of sentence markers
+Code does not cater for predicting the next word and cannot generate sentences
+################################################################################################
+
+################################################################################################
+IMPORT LIBRARIES
+################################################################################################
+
+import nltk
+from nltk.corpus import brown
+
+from nltk.util import bigrams
+from nltk.util import trigrams
+from nltk.util import everygrams
+from nltk.util import ngrams
+from nltk.util import pad_sequence
+
+from nltk.lm import MLE
+from nltk.lm import Vocabulary
+
+from nltk.lm.preprocessing import pad_both_ends
+from nltk.lm.preprocessing import flatten
+from nltk.lm.preprocessing import padded_everygram_pipeline
+
+################################################################################################
+DOWNLOAD BROWN CORPUS AND CREATE CORPUS OF SENTENCES
+################################################################################################
+
+words = nltk.corpus.brown.words()
+print("Number of words in brown corpus: ", len(words)) #1161192 words
+
+sents = list(nltk.corpus.brown.sents()) #57340 sentences
+print("Number of sentences in brown corpus: ", len(sents))
+
+#Create Corpus of train sentences
+trainSents = []
+for sent in sents:
+    lCaseSents = [word.lower() for word in sent if word.isalpha()]
+    Sents = [' '.join(lCaseSents)]
+    trainSents.append(Sents)
+
+################################################################################################
+Unigram Language Model for Brown Corpus
+################################################################################################
+
+#Flatten the list of Sentences
+flatSents = [item for sublist in trainSents for item in sublist]
+
+#Create tokens for words
+tokenized_text = [list(map(str.lower, nltk.tokenize.word_tokenize(sent))) for sent in flatSents]
+
+#
+n = 1
+train_data, padded_vocab = padded_everygram_pipeline(n, tokenized_text)
+modelUgm = MLE(n)
+modelUgm.fit(train_data, padded_vocab)
+print("Vocabulary of corpus: ", len(modelUgm.vocab))
+
+test_sentences = ['the', 'of']
+tokenized_text = [list(map(str.lower, nltk.tokenize.word_tokenize(sent))) for sent in test_sentences]
+
+test_data, _ = padded_everygram_pipeline(n, tokenized_text)
+
+#Probability scores for the test sentences
+for test in test_data:
+    print ("Unigram Model Brown Corpus MLE Estimate: ", [((ngram[-1], ngram[:-1]),modelUgm.score(ngram[-1], ngram[:-1])) for ngram in test])
+
+test_data, _ = padded_everygram_pipeline(n, tokenized_text)
+
+#Perplexity for test sentence
+for i, test in enumerate(test_data):
+    print("Unigram Model Brown Corpus PP({0}):{1}".format(test_sentences[i], modelUgm.perplexity(test)))
+
+
+################################################################################################
+Quadgram Language Model for Brown Corpus
+################################################################################################
+
+flatSents = [item for sublist in trainSents for item in sublist]
+tokenized_text = [list(map(str.lower, nltk.tokenize.word_tokenize(sent))) for sent in flatSents]
+
+n = 4
+train_data = [nltk.ngrams(t,4, pad_right=True, pad_left=True, left_pad_symbol="<s>", right_pad_symbol="</s>") for t in tokenized_text]
+words = [word.lower() for sent in tokenized_text for word in sent]
+words.extend(["<s>", "</s>"])
+padded_vocab = Vocabulary(words)
+
+
+modelQgm = MLE(n)
+modelQgm.fit(train_data, padded_vocab)
+print("Vocabulary of Brown Corpus(Quadgrams): ", len(modelQgm.vocab))
+
+test_sentences = ['at the same time', 'United States of America']
+
+tokenized_text = [list(map(str.lower, nltk.tokenize.word_tokenize(sent))) for sent in test_sentences]
+
+test_data = [nltk.ngrams(t, 4, pad_right=True, pad_left=True, left_pad_symbol="<s>", right_pad_symbol="</s>") for t in tokenized_text]
+
+print ("Quadgram Model Brown Corpus MLE Estimates")
+for test in test_data:
+    print ([((ngram[-1], (ngram[:-1])), modelQgm.score(ngram[-1], (ngram[:-1]))) for ngram in test])
+
+test_data = [nltk.ngrams(t, 4, pad_right=True, pad_left=True, left_pad_symbol="<s>", right_pad_symbol="</s>") for t in tokenized_text]
+
+for i, test in enumerate(test_data):
+    print("Quadgram Model Brown Corpus Perplexity PP({0}):{1}".format(test_sentences[i], modelQgm.perplexity(test)))
+ 
+ ################################################################################################
+ END OF CODE
+ ################################################################################################
