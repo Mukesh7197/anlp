@@ -1,6 +1,9 @@
 ####################################################################################################
 #Major idea of coding is based on ANLP classes conducted by Prof. Ramaseshan as part of NPTEL
-#Code improvements in terms of using scikit learn Perceptron model, confusion matrix are added
+#Code improvements in terms of using scikit learn Perceptron model, SGD, Single layer NN,
+#Two Layer NN and SVM
+
+#Binary classifier
 
 #Python script to check whether a given word is positive or negative (Sentiment Analysis)
 #Collect words that are positive or negative from open source
@@ -13,15 +16,19 @@
 ####################################################################################################
 IMPORT LIBRARIES
 ####################################################################################################
-
 import random
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Perceptron
+from sklearn import preprocessing
+from sklearn.linear_model import SGDClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
 from sklearn.metrics import confusion_matrix
-
+from sklearn.neural_network import MLPClassifier
+from sklearn import svm
 ####################################################################################################
 #Website to pick up positive and negative words for this exercise
 
@@ -248,7 +255,7 @@ cnt = 0
 for i in range(len(X_test)):
     if y_predict[i] != y_test[i]:
         cnt = cnt + 1
-print("Total number of misclassification: ", cnt) #221
+print("Total number of misclassification with Perceptron classifier: ", cnt) #221
 
 ####################################################################################################
 
@@ -279,4 +286,156 @@ print(df)
 
 #Total misclassification error is 84 + 137 = 221
 
+####################################################################################################
+STOCHASTIC GRADIENT CLASSIFIER
+####################################################################################################
+
+#Make a pipeline with standard scaler
+#Model shall learn for a maximum iteration of 1000 with loss stopping criterion as 1e-3 
+
+clfSGD = make_pipeline(StandardScaler(), SGDClassifier(max_iter=1000, tol=1e-3))
+clfSGD.fit(X_train, y_train)
+
+#Training and test accuracy of SGD classifier is more than the Perceptron Classifier
+trgAccSGD = (clfSGD.score(X_train, y_train))*100#Training accuracy is 87.23%
+testAccSGD = (clfSGD.score(X_test,y_test))*100 #Test accuracy is 88.34%
+
+# Function to check given words are positive or negative
+def predSentSGD(word):
+    senti = emb_dict[word]
+    val = clfSGD.predict(senti[:-1].reshape(1,-1))
+    print(word, "is Positive") if val == 1 else print(word, "is Negative")   
+
+#Mis classification error has reduced significantly from 221 to 142
+y_predSGD = clfSGD.predict(X_test)
+cnt = 0
+for i in range(len(X_test)):
+    if y_predSGD[i] != y_test[i]:
+        cnt = cnt + 1
+mcSGD = cnt
+print("Total number of misclassification with SGD classifier: ", mcSGD)
+
+####################################################################################################
+SINGLE LAYER NEURAL NETWORK
+####################################################################################################
+
+#Input layer 50 dim vector, one hidden layer with 128 units and output layer with 2 units
+#Model will be trained for 5000 epochs with learning rate of 0.00001 and lbfgs solver
+
+clfMLP = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(128), random_state=1, max_iter=5000)
+clfMLP.fit(X_train,y_train)
+
+#Training accuracy is 100% (Overfitting data)
+#However test accuracy of MLP classifier is more than the Perceptron and SGD Classifier
+
+trgAccMLP = (clfMLP.score(X_train, y_train))*100#Training accuracy is 100% (overfitting)
+testAccMLP = (clfMLP.score(X_test,y_test))*100 #Test accuracy is 87.03% (Better than SGD)
+
+# Function to check given words are positive or negative
+def predSentMLP(word):
+    senti = emb_dict[word]
+    val = clfMLP.predict(senti[:-1].reshape(1,-1))
+    print(word, "is Positive") if val == 1 else print(word, "is Negative")
+ 
+#Mis classification error increased to 158 FROM 142 
+y_predMLP = clfMLP.predict(X_test)
+cnt = 0
+for i in range(len(X_test)):
+    if y_predMLP[i] != y_test[i]:
+        cnt = cnt + 1
+mcMLP = cnt
+print("Total number of misclassification in MLP classifier with single hidden layer: ", mcMLP)
+
+####################################################################################################
+TWO LAYER NEURAL NETWORK TO CHECK IMPROVEMENT IN TEST ACCURACY
+####################################################################################################
+
+clfMLP2 = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(128, 128), random_state=1, max_iter=5000)
+clfMLP2.fit(X_train,y_train)
+
+#Training accuracy of MLP classifier with two hidden layers with 128 units each is 100%
+#However test accuracy is around 87.93%. Marginal improvement
+
+trgAccMLP2 = (clfMLP2.score(X_train, y_train))*100#Training accuracy is 100% (overfitting)
+testAccMLP2 = (clfMLP2.score(X_test,y_test))*100 #Test accuracy is 87.93%
+
+# Function to check given words are positive or negative
+def predSentMLP2(word):
+    senti = emb_dict[word]
+    val = clfMLP2.predict(senti[:-1].reshape(1,-1))
+    print(word, "is Positive") if val == 1 else print(word, "is Negative")   
+    
+#Mis classification error has decreased to 147 from 158 (Single Layer) but higher compared to SGD(142)
+y_predMLP2 = clfMLP2.predict(X_test)
+cnt = 0
+for i in range(len(X_test)):
+    if y_predMLP2[i] != y_test[i]:
+        cnt = cnt + 1
+mcMLP2 = cnt
+print("Total number of misclassification in MLP classifier with two hidden layers: ", mcMLP2)
+
+####################################################################################################
+SVM CLASSIFIER
+####################################################################################################
+
+clfSVM = svm.SVC()
+clfSVM.fit(X_train,y_train)
+
+#Training and test accuracy of SVM scores the highest 
+trgAccSVM = (clfSVM.score(X_train, y_train))*100#Training accuracy is 93.78%
+testAccSVM = (clfSVM.score(X_test,y_test))*100 #Test accuracy is 89.66%
+
+# Function to check given words are positive or negative
+def predSentSVM(word):
+    senti = emb_dict[word]
+    val = clfSVM.predict(senti[:-1].reshape(1,-1))
+    print(word, "is Positive") if val == 1 else print(word, "is Negative")
+    
+ #Mis classification error of SVM is the lowest at 126
+y_predSVM = clfSVM.predict(X_test)
+cnt = 0
+for i in range(len(X_test)):
+    if y_predSVM[i] != y_test[i]:
+        cnt = cnt + 1
+mcSVM = cnt
+print("Total number of misclassification in SVM classifer: ", mcSVM)
+
+####################################################################################################
+#Store the training, test accuracy and misclassification errors of the models in a dataframe
+####################################################################################################
+
+perc = ['Perc', trgAccPerc, testAccPerc, mcPerc]
+SGD = ['SGD', trgAccSGD, testAccSGD, mcSGD]
+MLPSingle = ['Single Layer', trgAccMLP, testAccMLP, mcMLP]
+MLPTwo = ['Two Layers', trgAccMLP2, testAccMLP2, mcMLP2]
+SVM = ['SVM', trgAccSVM, testAccSVM, mcSVM]
+
+mdl = ['Model Name','Trg Acc', 'Test Acc', 'Misclassification Errors']
+           
+listModels = [perc, SGD, MLPSingle, MLPTwo, SVM]
+
+modelsDF = pd.DataFrame(listModels, columns = mdl)
+
+####################################################################################################
+#Plot training, test accuracy and misclassification errors of the models 
+####################################################################################################
+
+fig, (ax1, ax2, ax3) =plt.subplots(1,3, figsize = (20,10))
+ax1.bar(modelsDF['Model Name'] , modelsDF['Trg Acc'], color='g')
+ax1.set_ylabel("Accuracy")
+ax1.set_xlabel("Model Name")
+ax1.set_title("Training Accuracy")
+ax2.bar(modelsDF['Model Name'] , modelsDF['Test Acc'],color='m')
+ax2.set_title("Test Accuracy")
+ax2.set_xlabel("Model Name")
+ax3.plot(modelsDF['Model Name'], modelsDF['Misclassification Errors'])
+plt.xlabel("Model Name")
+plt.ylabel("Number of Errors")
+plt.title("Misclassification Errors")
+plt.show()
+
+#Highest training accuracy of 100% is MLP with either one or two Layers. Each layer has 128 units. 
+#However its test accuracy is lower and hence misclassification error is higher compared to SVM 
+#SVM has comparable training accuracy but slightly better test accuracy and lowest misclassification error.
+#Best model is SVM as it has lowest misclassification error with highest test accuracy.
 ####################################################################################################
