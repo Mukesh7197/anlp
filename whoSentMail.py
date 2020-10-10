@@ -1,16 +1,29 @@
+###################################################################################################################
+#To determine the sender of a mail using python and nltk
+#Five sentences from sender Ram and Raj is available as corpus
+#Preprocess the corpus and collect number of words in each corpus and calculate total words in corpus
+#Calculate probability of each word and store as a fraction for each of the corpus
+#Calculate probability of test sentence is I wish you would come
+#To resolve the problem, add 1 to the numerator for each word probability
+#Recalculate probability for each of the corpus and arrive at a decision
+###################################################################################################################
+IMPORT LIBRARIES
+###################################################################################################################
 import pandas as pd
 from fractions import Fraction
-
 import nltk
 from nltk import FreqDist
-
-#Corpus
+###################################################################################################################
+CORPUS
+###################################################################################################################
 Ram = ['I wish you the best', 'I hope to reach home by 6 P M', 'I wish to go home early',
       'I do not want to buy this', 'I hope it rains today']
 Raj = ['I hope to play tennis tonight', 'I hope to win this tournament', 'I hope to buy this car in the next year',
       'I wish to get a good score this time', 'I wish they would come']
 
-#Calculate number of words in Ram, Raj and calculate total words
+###################################################################################################################
+PREPROCESS CORPUS AND COLLECT DATA LIKE NUMBER OF WORDS IN EACH CORPUS AND CALCULATE TOTAL WORDS
+###################################################################################################################
 ramWords = []
 for i in range(0,len(Ram)):
     #Split the strings based on blankspace
@@ -45,10 +58,12 @@ fDistRaj = dict(nltk.FreqDist(rajWords))
 print("Frequency of words in Ram Corpus\n", fDistRam)
 print("Frequency of words in Raj Corpus\n", fDistRaj)
 
+###################################################################################################################
 #Calculate P(X1|y) = Count(X1,y)/Count(Y)
 #y are class labels (Ram or Raj)
 #X1 are words (I, wish, hope etc.)
 #Y is the total number of words in both the corpus (ie) 68
+###################################################################################################################
 
 #Define a function to calculate probability and store result as a fraction
 probRam = {}
@@ -90,8 +105,9 @@ print("\n\nLength of words for which probability calculated in Raj corpus: ", le
 #Prior probability P(y) = count(y)/count(Y). As there are only two classes it is 1/2
 PrProb = Fraction(1,2)
 print("Prior probability :", PrProb)
-
+###################################################################################################################
 #Guess who wrote the sentence "I wish you would come"
+###################################################################################################################
 #For Ram Corpus
 def bRam(w1,w2,w3,w4,w5):
     lstVal = []
@@ -115,8 +131,9 @@ def bRam(w1,w2,w3,w4,w5):
     
  bRam('I','wish','you','would','come')
  #Result is zero
- 
+ ###################################################################################################################
 #Guess who wrote the sentence "I wish you would come"
+###################################################################################################################
 #For Raj Corpus
  def bRaj(w1,w2,w3,w4,w5):
     lstVal = []
@@ -142,10 +159,10 @@ def bRam(w1,w2,w3,w4,w5):
  
  bRaj('I','wish','you','would','come')
  #Result is zero
- 
- #Both probabilities are zero.
-#Hence add 1 to each of the words in the numerator only
 
+###################################################################################################################      
+#Both probabilities are zero. #Hence add 1 to each of the words in the numerator only
+###################################################################################################################
 #Get the keys of Ram corpus for which the value is zero and store the keys separately
 keyRam0 = []
 keyRaj0 = []
@@ -181,6 +198,7 @@ def upProbRajXY(w1):
 #print("Updated Probability of present word I in Ram corpus", upProbRamXY('I'))
 #print("Original Probability of present word I in Raj corpus", probRajXY('I'))
 #print("Updated Probability of present word I in Raj corpus", upProbRajXY('I'))
+###################################################################################################################
 
 #update P(X1|y) for all unique words in Ram and Raj corpus and store it in a list
 uprRam = {}
@@ -235,9 +253,12 @@ def ubRaj(w1,w2,w3,w4,w5):
     print("Baye's Probability from revised Raj Corpus is: ", PrProb*finProb)
     
     return finProb
-
+###################################################################################################################
+#FINAL DECISION
+###################################################################################################################
 #print(bRam('I','wish','you','would','come'))
 #print(bRaj('I','wish','you','would','come'))
 valUpdatedRam = ubRam('I','wish','you','would','come')
 valUpdatedRaj = ubRaj('I','wish','you','would','come')
 print("Ram sent the mail") if valUpdatedRam > valUpdatedRaj else print("Raj sent the mail")
+###################################################################################################################
